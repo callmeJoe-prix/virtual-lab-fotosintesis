@@ -1,82 +1,167 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import altair as alt
-import time
+import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Virtual Lab Fotosintesis", layout="wide")
-
-st.title("🌿 Virtual Lab Fotosintesis – Simulasi Fotosintesis Sederhana")
-st.write("""
-Praktikum ini mensimulasikan pengaruh **intensitas cahaya**, **konsentrasi CO₂**, 
-**panjang gelombang cahaya**, dan **suhu** terhadap produksi oksigen (O₂).
-""")
-
-# Sidebar controls
-st.sidebar.header("Kontrol Variabel")
-
-intensity = st.sidebar.slider("Intensitas Cahaya (μmol/m²/s)", 0, 300, 150)
-co2 = st.sidebar.slider("Konsentrasi CO₂ (ppm)", 200, 1200, 400)
-temperature = st.sidebar.slider("Suhu (°C)", 10, 40, 25)
-wavelength = st.sidebar.selectbox("Panjang Gelombang Cahaya", 
-                                  ["Merah (650 nm)", "Biru (450 nm)", "Hijau (550 nm)"])
-
-# Button
-run = st.sidebar.button("🌱 Jalankan Simulasi")
-
-# Simulation
-if run:
-    st.subheader("📊 Hasil Simulasi Produksi O₂")
+# --- 1. Fungsi Simulasi Logika Fotosintesis ---
+def calculate_photosynthesis_rate(light, co2):
+    """
+    Menghitung laju fotosintesis berdasarkan dua faktor pembatas.
+    Laju ditentukan oleh faktor yang nilainya paling rendah (Hukum Liebig).
     
-    data = []
-    progress = st.progress(0)
-    placeholder_chart = st.empty()
+    Args:
+        light (float): Nilai intensitas cahaya (0-100).
+        co2 (float): Nilai konsentrasi CO2 (0-100).
+        
+    Returns:
+        tuple: (rate, oxygen_production, glucose_production)
+    """
+    
+    # Faktor Pembatas Utama (Minimum)
+    limiting_factor = min(light, co2)
+    
+    # Laju Fotosintesis (Skala 0-100)
+    # Faktor dasar 0.8 untuk menjaga agar hasil tidak selalu 100
+    base_rate = limiting_factor * 0.8 
+    
+    # Asumsi: Kecepatan saturasi terjadi setelah faktor pembatas mencapai 80
+    if limiting_factor > 80:
+        rate = 80 + (limiting_factor - 80) * 0.2  # Kenaikan melambat (Saturasi)
+    else:
+        rate = base_rate
+        
+    # Produksi Hasil (Unit Relatif)
+    # Reaksi Fotosintesis: CO2 + H2O (+ Cahaya) -> C6H12O6 + O2
+    # Kita asumsikan Oksigen (O2) adalah produk utama yang diukur, dan Glukosa (C6H12O6) sebagai produk akhir.
+    oxygen_production = rate * 1.2 # Oksigen biasanya lebih banyak dari Glukosa
+    glucose_production = rate * 0.9 # Glukosa sebagai produk akhir
+    
+    # Batasi hasil di 100
+    oxygen_production = min(100, oxygen_production)
+    glucose_production = min(100, glucose_production)
+    
+    # Laju total dibulatkan
+    rate = min(100, rate)
+    
+    return rate, oxygen_production, glucose_production
 
-    # Model simple photosynthesis rate
-    for t in range(1, 11):
-        base_o2 = intensity * 0.04 + (co2 / 1000) * 10  
 
-        # wavelength effect
-        if "Biru" in wavelength:
-            wave_factor = 1.2
-        elif "Merah" in wavelength:
-            wave_factor = 1.0
-        else:
-            wave_factor = 0.5
+# --- 2. Streamlit App Interface ---
 
-        temp_factor = np.exp(-(temperature - 25)**2 / 50)
+# Konfigurasi Halaman
+st.set_page_config(
+    page_title="Simulasi Fotosintesis",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-        o2 = base_o2 * wave_factor * temp_factor
-        o2 += np.random.uniform(-1, 1)
+st.title("🌱 Simulasi Laju Fotosintesis")
+st.markdown("Eksplorasi hubungan antara intensitas cahaya dan konsentrasi $\text{CO}_2$ terhadap laju produksi oksigen dan glukosa.")
 
-        data.append({"Waktu (s)": t, "Oksigen (O₂)": o2})
+# --- Bagian Sidebar untuk Input ---
+with st.sidebar:
+    st.header("🔬 Faktor Pembatas")
+    
+    # Slider untuk Intensitas Cahaya
+    light_intensity = st.slider(
+        'Intensitas Cahaya (Unit Relatif)', 
+        min_value=0, 
+        max_value=100, 
+        value=70, 
+        step=5,
+        help="Energi yang dibutuhkan untuk Reaksi Terang."
+    )
+    
+    # Slider untuk Konsentrasi CO2
+    co2_concentration = st.slider(
+        'Konsentrasi $\\text{CO}_2$ (Unit Relatif)', 
+        min_value=0, 
+        max_value=100, 
+        value=50, 
+        step=5,
+        help="Bahan baku yang dibutuhkan untuk Siklus Calvin (Reaksi Gelap)."
+    )
+    
+    st.markdown("---")
+    st.caption("Ubah parameter dan hasil akan diperbarui secara otomatis.")
 
-        # animate output
-        df_temp = pd.DataFrame(data)
-        chart = alt.Chart(df_temp).mark_line(point=True).encode(
-            x="Waktu (s)",
-            y="Oksigen (O₂)"
-        )
-        placeholder_chart.altair_chart(chart, use_container_width=True)
 
-        progress.progress(t / 10)
-        time.sleep(0.3)
+# --- 3. Hitung dan Tampilkan Hasil ---
 
-    st.success("Simulasi selesai!")
+# Hitung hasil simulasi
+rate, oxygen, glucose = calculate_photosynthesis_rate(light_intensity, co2_concentration)
 
-    df = pd.DataFrame(data)
-    st.dataframe(df)
+# Tentukan Faktor Pembatas
+limiting_factor_name = ""
+if light_intensity < co2_concentration:
+    limiting_factor_name = "Intensitas Cahaya"
+    message_type = st.error
+    
+elif co2_concentration < light_intensity:
+    limiting_factor_name = "Konsentrasi CO₂"
+    message_type = st.error
+    
+else:
+    limiting_factor_name = "Keseimbangan Optimal"
+    message_type = st.info
+    
+# Tampilkan Hasil Utama
+st.subheader("Laju Reaksi dan Produk")
 
-    avg_o2 = df["Oksigen (O₂)"].mean()
-    st.info(f"**Rata-rata produksi O₂: {avg_o2:.2f} unit**")
+col_rate, col_o2, col_glukosa = st.columns(3)
 
-    # Download CSV
-    csv = df.to_csv(index=False).encode("utf-8")
-    st.download_button("📥 Unduh Data CSV", csv, "hasil_fotosintesis.csv")
+with col_rate:
+    # Laju Reaksi
+    st.metric(label="Laju Fotosintesis Total", value=f"{rate:.2f} Unit/Jam", delta=None)
 
-    # Reflection
-    st.subheader("🧠 Refleksi Pembelajaran")
-    reflection = st.text_area("Tuliskan jawaban refleksi Anda di sini:")
+with col_o2:
+    # Produksi Oksigen
+    st.metric(label="Produksi Oksigen ($\text{O}_2$)", value=f"{oxygen:.2f} Unit", delta=None)
 
-    if st.button("📄 Download Refleksi"):
-        st.download_button("Klik untuk Unduh", reflection, "refleksi_fotosintesis.txt")
+with col_glukosa:
+    # Produksi Glukosa
+    st.metric(label="Produksi Glukosa ($\text{C}_6\text{H}_{12}\text{O}_6$)", value=f"{glucose:.2f} Unit", delta=None)
+
+st.markdown("---")
+
+# --- 4. Tampilkan Analisis dan Grafik ---
+
+st.subheader("Analisis Faktor Pembatas")
+
+message_type(
+    f"Faktor yang paling membatasi laju fotosintesis saat ini adalah **{limiting_factor_name}** (Nilai: {min(light_intensity, co2_concentration)})."
+)
+
+st.markdown("""
+<style>
+    .stAlert {
+        padding: 1rem;
+        border-radius: 0.5rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
+# Data untuk Grafik
+data = pd.DataFrame({
+    'Faktor': ['Cahaya', 'CO₂'],
+    'Nilai Input': [light_intensity, co2_concentration]
+})
+
+# Grafik Batang Sederhana untuk Perbandingan Input
+st.subheader("Perbandingan Faktor Input")
+fig, ax = plt.subplots(figsize=(6, 4))
+bars = ax.bar(data['Faktor'], data['Nilai Input'], color=['#FFC300', '#2E86C1'])
+ax.set_ylim(0, 100)
+ax.set_ylabel('Unit Relatif')
+ax.set_title('Keseimbangan Faktor Pembatas')
+
+# Tambahkan label nilai di atas batang
+for bar in bars:
+    yval = bar.get_height()
+    ax.text(bar.get_x() + bar.get_width()/2.0, yval + 2, f"{int(yval)}", ha='center', va='bottom')
+
+st.pyplot(fig)
+
+st.markdown("---")
+st.caption("Berdasarkan **Hukum Liebig**, laju pertumbuhan (dalam hal ini, fotosintesis) ditentukan oleh sumber daya yang paling langka, meskipun sumber daya lainnya melimpah.")
