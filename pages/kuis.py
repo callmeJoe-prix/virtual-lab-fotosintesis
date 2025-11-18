@@ -1,18 +1,30 @@
 import streamlit as st
 
-st.title("📝 Kuis Fotosintesis")
 
-questions = {
-    "Apa produk utama reaksi terang?": ["ATP dan NADPH", "Glukosa", "CO₂", "Air"],
-    "Dimana reaksi gelap terjadi?": ["Stroma kloroplas", "Tilakoid", "Sitoplasma", "Nukleus"],
-    "Apa faktor yang meningkatkan laju fotosintesis?": ["Cahaya", "Nitrogen", "Protein hewani", "Tekanan tanah"]
+st.title("📈 Kuis Fotosintesis")
+
+
+questions = [
+{
+"q": "Apa bahan utama fotosintesis?",
+"options": ["Oksigen", "Karbon dioksida dan air", "Protein"],
+"answer": 1,
+},
+{
+"q": "Dimana fotosintesis terjadi?",
+"options": ["Mitokondria", "Kloroplas", "Inti sel"],
+"answer": 1,
 }
+]
+
 
 score = 0
-for q, options in questions.items():
-    answer = st.radio(q, options, key=q)
-    if answer == options[0]:
-        score += 1
+for i, q in enumerate(questions):
+st.write(f"### {i+1}. {q['q']}")
+choice = st.radio("Pilih jawaban:", q["options"], key=f"q{i}")
+if choice == q["options"][q["answer"]]:
+score += 1
 
-if st.button("Lihat Hasil"):
-    st.success(f"Nilai Anda: {score} / {len(questions)}")
+
+st.write("---")
+st.subheader(f"Skor Anda: {score} / {len(questions)}")
