@@ -1,12 +1,15 @@
-# Virtual Lab Fotosintesis (Streamlit)
+# 🌱 Virtual Photosynthesis Lab
 
-Laboratorium virtual gratis untuk mempelajari pengaruh variabel lingkungan
-(Intensitas cahaya, CO₂, suhu, panjang gelombang) terhadap produksi oksigen (O₂)
-pada proses fotosintesis. 
+Laboratorium virtual berbasis Streamlit yang mensimulasikan:
+- Kurva respon cahaya (Light Response Curve)
+- Produksi oksigen
+- Pengaruh suhu & CO₂
+- Parameter fisiologi tanaman
 
-Fitur:
-- Simulasi waktu nyata
-- Grafik interaktif
-- Output CSV
-- Refleksi mahasiswa (download txt)
-- Gratis, menggunakan Streamlit Cloud
+Dikembangkan sebagai bagian dari **Laporan Aktualisasi CPNS**.
+
+---
+
+## 🚀 Cara Menjalankan
+
+### 1. Clone repo
