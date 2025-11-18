@@ -1,22 +1,27 @@
 import streamlit as st
 
-st.title("📚 Teori Fotosintesis")
 
-st.header("1. Reaksi Terang")
-st.write("""
-Reaksi terang menghasilkan ATP dan NADPH menggunakan energi cahaya.
-""")
+st.title("📘 Teori Fotosintesis")
+st.markdown("""
+## 1. Pengantar Fotosintesis
+Fotosintesis adalah proses dimana tanaman mengubah energi cahaya menjadi energi kimia.
 
-st.header("2. Reaksi Gelap (Siklus Calvin)")
-st.write("""
-Reaksi gelap menggunakan ATP dan NADPH untuk menghasilkan glukosa.
-""")
 
-st.header("3. Faktor Pembatas")
-st.write("""
-- Intensitas cahaya  
-- Konsentrasi CO₂  
-- Suhu  
-- Kelembaban  
-- Ketersediaan air  
+### Persamaan umum:
+
+
+```
+6 CO₂ + 6 H₂O + cahaya → C₆H₁₂O₆ + 6 O₂
+```
+
+
+## 2. Faktor-faktor yang mempengaruhi fotosintesis:
+- Intensitas cahaya
+- Konsentrasi CO₂
+- Suhu
+- Pigmen klorofil
+
+
+## 3. Struktur daun dan kloroplas
+Gambaran umum anatomi daun dan fungsi tiap bagian.
 """)
