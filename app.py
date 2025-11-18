@@ -1,49 +1,75 @@
 import streamlit as st
-import pandas as pd
-from modules.simulator import PhotosynthesisSimulator
-from modules.utils import load_parameters
-from modules.graph import plot_light_curve, plot_o2_output
 
-st.set_page_config(
-    page_title="Virtual Photosynthesis Lab",
-    layout="wide",
-    page_icon="🌱"
+from utils.localisation import get_localised_text
+from utils.icons import icons
+
+# Singleton rule
+st.set_page_config(layout="wide", page_title="Virtual Lab Fotosintesis")
+
+# Default session states
+st.session_state.setdefault("language", "Indonesia")
+st.session_state.setdefault("version", "Default")
+st.session_state.setdefault("show_video_transcripts", False)
+
+language = st.session_state["language"]
+version = st.session_state["version"]
+text = get_localised_text(language)
+
+# Navigation Setup
+pg = st.navigation(
+    [
+        st.Page(
+            "routes/home.py",
+            title=text("PAGE_HOME"),
+            icon=icons["home"],
+        ),
+        st.Page(
+            "routes/teori.py",
+            title=text("PAGE_TEORI"),
+            icon=icons["book"],
+        ),
+        st.Page(
+            "routes/simulasi.py",
+            title=text("PAGE_SIMULASI"),
+            icon=icons["lab"],
+        ),
+        st.Page(
+            "routes/kuis.py",
+            title=text("PAGE_KUIS"),
+            icon=icons["quiz"],
+        ),
+    ]
 )
 
-st.title("🌱 Virtual Photosynthesis Laboratory – Advanced Version")
-st.write("Simulasi fotosintesis berbasis parameter fisiologi tanaman.")
+# Sidebar
+with st.sidebar:
 
-# Sidebar parameters
-st.sidebar.header("Input Parameter")
+    st.write(f"## ⚙ Pengaturan")
 
-light = st.sidebar.slider("Intensitas Cahaya (µmol m⁻² s⁻¹)", 0, 2000, 500)
-co2 = st.sidebar.slider("Konsentrasi CO₂ (ppm)", 100, 2000, 400)
-temp = st.sidebar.slider("Suhu (°C)", 5, 45, 25)
+    # Language selector
+    languages = {
+        "Indonesia": "🇮🇩 Bahasa Indonesia",
+        "English": "🇬🇧 English",
+    }
+    lang_idx = list(languages.keys()).index(language)
 
-# Load parameters
-params = load_parameters("data/parameters.json")
-sim = PhotosynthesisSimulator(params)
+    st.selectbox(
+        label="🌍 Bahasa",
+        index=lang_idx,
+        options=list(languages.keys()),
+        key="_language",
+        on_change=lambda: st.session_state.update({"language": st.session_state["_language"]}),
+        format_func=languages.get,
+    )
 
-# Run simulation
-curve = sim.generate_light_curve()
-o2 = sim.calculate_o2_production(light, temp, co2)
+    # Video transcripts toggle
+    st.checkbox(
+        label="Tampilkan Transkrip Video",
+        key="_show_video_transcripts",
+        on_change=lambda: st.session_state.update(
+            {"show_video_transcripts": st.session_state["_show_video_transcripts"]}
+        ),
+    )
 
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader("Kurva Respon Cahaya")
-    st.pyplot(plot_light_curve(curve))
-
-with col2:
-    st.subheader("Produksi Oksigen")
-    st.metric("O₂ (mg/L/jam)", f"{o2:.2f}")
-    st.pyplot(plot_o2_output(light, o2))
-
-# Download button
-df = pd.DataFrame({"Intensity": [light], "O2": [o2]})
-st.download_button("Download hasil simulasi (CSV)", df.to_csv(), "result.csv")
-
-st.info(
-    "Aplikasi ini dikembangkan untuk mendukung pembelajaran fotosintesis "
-    "serta laporan aktualisasi CPNS."
-)
+# Run selected page
+pg.run()
