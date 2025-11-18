@@ -1,16 +1,16 @@
 import streamlit as st
 
-st.title("📘 Pendahuluan")
 
-st.header("Tujuan Pembelajaran")
-st.write("""
-1. Mahasiswa memahami konsep dasar fotosintesis.  
-2. Mahasiswa mengetahui faktor yang memengaruhi laju fotosintesis.  
-3. Mahasiswa dapat melakukan simulasi virtual dan menganalisis hasilnya.
-""")
+st.title("🌱 Virtual Lab Fotosintesis — Pendahuluan")
+st.markdown("""
+Selamat datang di **Laboratorium Virtual Fotosintesis**.
 
-st.header("Deskripsi Kegiatan")
-st.write("""
-Laboratorium virtual ini dirancang untuk membantu mahasiswa mempelajari 
-fotosintesis secara interaktif tanpa memerlukan laboratorium fisik.
+
+Di halaman ini Anda akan mempelajari:
+- Apa itu fotosintesis?
+- Mengapa proses ini penting bagi tanaman dan kehidupan di bumi?
+- Bagaimana Anda akan menggunakan Lab Virtual ini.
+
+
+Klik menu di sebelah kiri untuk melanjutkan.
 """)
